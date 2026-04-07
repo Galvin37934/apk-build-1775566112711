@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.rez.app" version="1.0.0" xmlns="http://www.w3.org/ns/widgets">
+    <name>Tes latihan tka</name>
+    <content src="index.html" />
+    <icon src="icon.png" />
+</widget>
