@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Latihan TKA Matematika AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; font-family: 'Nunito', sans-serif; margin: 0; padding: 0; user-select: none; }
+        body { background-color: #ffffff; color: #4b4b4b; display: flex; flex-direction: column; height: 100dvh; overflow: hidden; }
+        #quiz-screen { display: flex; flex-direction: column; height: 100%; }
+        .header { display: flex; align-items: center; padding: 20px 16px; gap: 15px; flex-shrink: 0; }
+        .close-btn { color: #afafaf; font-size: 24px; cursor: pointer; font-weight: 800; }
+        .progress-bg { flex-grow: 1; background-color: #e5e5e5; height: 16px; border-radius: 10px; overflow: hidden; }
+        .progress-fill { background-color: #58cc02; height: 100%; width: 0%; border-radius: 10px; transition: width 0.3s ease; }
+        .progress-text { color: #afafaf; font-weight: 800; font-size: 16px; white-space: nowrap; }
+        .main-content { flex-grow: 1; padding: 0 16px 20px 16px; display: flex; flex-direction: column; max-width: 600px; margin: 0 auto; width: 100%; overflow-y: auto; }
+        .title { font-size: 24px; margin-bottom: 20px; color: #3c3c3c; }
+        .question-box { font-size: 18px; margin-bottom: 30px; line-height: 1.5; }
+        .options { display: flex; flex-direction: column; gap: 12px; }
+        .option { background: white; border: 2px solid #e5e5e5; border-bottom-width: 4px; border-radius: 16px; padding: 16px; font-size: 17px; cursor: pointer; text-align: left; color: #4b4b4b; transition: all 0.1s; }
+        .option:active { border-bottom-width: 2px; transform: translateY(2px); }
+        .option.selected { border-color: #84d8ff; background-color: #ddf4ff; color: #1cb0f6; }
+        .footer { border-top: 2px solid #e5e5e5; padding: 24px 16px calc(24px + env(safe-area-inset-bottom)); display: flex; justify-content: center; flex-shrink: 0; background: white; }
+        .btn-action { background-color: #e5e5e5; color: #afafaf; border: none; border-radius: 16px; padding: 16px; font-size: 18px; font-weight: 800; width: 100%; max-width: 600px; cursor: not-allowed; text-transform: uppercase; }
+        .btn-action.active { background-color: #58cc02; color: white; box-shadow: 0 4px 0 #58a700; cursor: pointer; }
+        .btn-action.active:active { box-shadow: 0 0 0 #58a700; transform: translateY(4px); }
+        
+        #loading-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; }
+        .spinner { border: 4px solid #e5e5e5; border-top: 4px solid #1cb0f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        #result-screen { display: none; flex-direction: column; align-items: center; height: 100%; padding: 40px 20px; max-width: 500px; margin: 0 auto; width: 100%; }
+        .result-title { font-size: 26px; color: #5e5b75; margin-bottom: 20px; }
+        .chart-container { width: 200px; height: 200px; margin-bottom: 20px; }
+        .circular-chart { display: block; margin: 0 auto; max-width: 100%; max-height: 250px; }
+        .circle-bg { fill: none; stroke: #d94b4b; stroke-width: 4; }
+        .circle { fill: none; stroke: #58cc02; stroke-width: 4; stroke-linecap: butt; transition: stroke-dasharray 1s ease-out; }
+        .legend { display: flex; gap: 20px; font-size: 16px; color: #5e5b75; margin-bottom: 30px; font-weight: 700; }
+        .legend-item { display: flex; align-items: center; gap: 8px; }
+        .color-box { width: 24px; height: 8px; border-radius: 2px; }
+        .color-green { background-color: #58cc02; }
+        .color-red { background-color: #d94b4b; }
+        .stats-box { font-size: 22px; color: #2b2b2b; text-align: center; line-height: 1.8; margin-bottom: 40px; }
+        .stat-green { color: #58cc02; font-weight: 800; }
+        .stat-red { color: #d94b4b; font-weight: 800; }
+        .btn-retry { background-color: #5a4bda; color: white; border: none; border-radius: 16px; padding: 16px; font-size: 18px; font-weight: 800; width: 100%; cursor: pointer; box-shadow: 0 4px 0 #4235a8; }
+        .btn-retry:active { box-shadow: 0 0 0 #4235a8; transform: translateY(4px); }
+    </style>
+</head>
+<body>
+
+    <div id="loading-screen">
+        <div class="spinner"></div>
+        <h2 style="color: #5e5b75;">AI lagi bikin soal...</h2>
+        <p style="color: #afafaf; margin-top: 10px;">Tunggu bentar ya sekitar 5-10 detik.</p>
+    </div>
+
+    <div id="quiz-screen" style="display: none;">
+        <div class="header">
+            <div class="close-btn">✕</div>
+            <div class="progress-bg"><div class="progress-fill" id="progress"></div></div>
+            <div class="progress-text" id="progress-text">1/10</div>
+        </div>
+        <div class="main-content">
+            <h2 class="title">Pilih jawaban yang tepat</h2>
+            <div class="question-box" id="question-text">Loading...</div>
+            <div class="options" id="options-container"></div>
+        </div>
+        <div class="footer">
+            <button class="btn-action" id="action-btn" onclick="nextQuestion()">Selanjutnya</button>
+        </div>
+    </div>
+
+    <div id="result-screen">
+        <h2 class="result-title">Laporan Skor</h2>
+        <div class="chart-container">
+            <svg viewBox="0 0 36 36" class="circular-chart">
+                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path class="circle" id="donut-val" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            </svg>
+        </div>
+        <div class="legend">
+            <div class="legend-item"><div class="color-box color-green"></div> Benar</div>
+            <div class="legend-item"><div class="color-box color-red"></div> Salah</div>
+        </div>
+        <div class="stats-box">
+            Total Soal: <b id="stat-total">10</b><br>
+            Benar: <span class="stat-green" id="stat-benar">0</span><br>
+            Salah: <span class="stat-red" id="stat-salah">0</span>
+        </div>
+        <button class="btn-retry" onclick="startNewSession()">Bikin Soal Baru (AI)</button>
+    </div>
+
+    <script>
+        const GEMINI_API_KEY = "AIzaSyB3YJD6W2PyIe7oe4SXDLkPgRqNR7GgLr8";
+        
+        let sessionQuestions = [];
+        let TOTAL_SOAL = 10;
+        let currentQ = 0;
+        let selectedOpt = null;
+        let userAnswers = [];
+
+        async function fetchGeminiQuestions() {
+            // Pake gemini-2.5-flash
+            const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + GEMINI_API_KEY;
+            
+            const prompt = "Buatkan 10 soal pilihan ganda Matematika SMP untuk persiapan tes TKA. Topik: Operasi bilangan bulat, perbandingan, aljabar, dan barisan aritmetika. Output harus murni JSON Array berisi object dengan struktur: [{\"q\": \"soal cerita\", \"opts\": [\"A. pilihan\", \"B. pilihan\", \"C. pilihan\", \"D. pilihan\"], \"ans\": 0}] dimana ans adalah index jawaban benar (0-3). Jangan output text apapun selain JSON.";
+
+            try {
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }],
+                        generationConfig: { temperature: 0.7 }
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error?.message || "HTTP Error");
+                }
+
+                let rawText = data.candidates[0].content.parts[0].text;
+                rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+                sessionQuestions = JSON.parse(rawText);
+                
+                document.getElementById("loading-screen").style.display = "none";
+                document.getElementById("quiz-screen").style.display = "flex";
+                loadQuestion();
+
+            } catch (error) {
+                console.error("Gagal generate:", error);
+                document.getElementById("loading-screen").innerHTML = "<h2 style='color:#ea2b2b;'>Gagal konek ke AI!</h2><p style='color:#afafaf; margin-top:10px;'>Coba <i>refresh</i> browser lu atau cek koneksi internet.</p><p style='color:#ea2b2b; font-size:12px; margin-top:10px;'>" + error.message + "</p>";
+            }
+        }
+
+        const qText = document.getElementById("question-text");
+        const optsContainer = document.getElementById("options-container");
+        const actionBtn = document.getElementById("action-btn");
+        const progress = document.getElementById("progress");
+        const progressText = document.getElementById("progress-text");
+
+        function loadQuestion() {
+            selectedOpt = null;
+            let q = sessionQuestions[currentQ];
+            
+            qText.innerHTML = q.q;
+            optsContainer.innerHTML = "";
+            actionBtn.classList.remove("active");
+            
+            if(currentQ === TOTAL_SOAL - 1) {
+                actionBtn.innerText = "Kumpulin";
+            } else {
+                actionBtn.innerText = "Selanjutnya";
+            }
+            
+            let progressPercent = ((currentQ + 1) / TOTAL_SOAL) * 100;
+            progress.style.width = progressPercent + "%";
+            progressText.innerText = (currentQ + 1) + "/" + TOTAL_SOAL;
+
+            q.opts.forEach((opt, index) => {
+                let btn = document.createElement("button");
+                btn.className = "option";
+                btn.innerText = opt;
+                btn.onclick = () => selectOption(index, btn);
+                optsContainer.appendChild(btn);
+            });
+        }
+
+        function selectOption(index, btn) {
+            selectedOpt = index;
+            document.querySelectorAll(".option").forEach(b => b.classList.remove("selected"));
+            btn.classList.add("selected");
+            actionBtn.classList.add("active");
+        }
+
+        function nextQuestion() {
+            if (selectedOpt === null) return; 
+            userAnswers.push(selectedOpt);
+
+            if (currentQ < TOTAL_SOAL - 1) {
+                currentQ++;
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            document.getElementById("quiz-screen").style.display = "none";
+            document.getElementById("result-screen").style.display = "flex";
+
+            let benar = 0;
+            for(let i=0; i<TOTAL_SOAL; i++) {
+                if(userAnswers[i] === sessionQuestions[i].ans) benar++;
+            }
+            let salah = TOTAL_SOAL - benar;
+            let percent = (benar / TOTAL_SOAL) * 100;
+
+            document.getElementById("stat-total").innerText = TOTAL_SOAL;
+            document.getElementById("stat-benar").innerText = benar;
+            document.getElementById("stat-salah").innerText = salah;
+            
+            setTimeout(() => {
+                document.getElementById("donut-val").setAttribute("stroke-dasharray", percent + ", 100");
+            }, 100);
+        }
+
+        function startNewSession() {
+            document.getElementById("result-screen").style.display = "none";
+            document.getElementById("quiz-screen").style.display = "none";
+            
+            document.getElementById("loading-screen").innerHTML = "<div class='spinner'></div><h2 style='color: #5e5b75;'>AI lagi bikin soal...</h2><p style='color: #afafaf; margin-top: 10px;'>Tunggu bentar ya sekitar 5-10 detik.</p>";
+            document.getElementById("loading-screen").style.display = "flex";
+            
+            document.getElementById("donut-val").setAttribute("stroke-dasharray", "0, 100");
+            
+            currentQ = 0;
+            userAnswers = [];
+            fetchGeminiQuestions();
+        }
+
+        startNewSession();
+    </script>
+</body>
+</html>
